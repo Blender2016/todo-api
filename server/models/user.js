@@ -65,7 +65,27 @@ const UserSchema = new mongoose.Schema({
           'tokens.access':'auth'
       })
   }
+
+  UserSchema.statics.findByCredentials= function(email,password){
+    var User = this;
+    return User.findOne({email}).then((user)=>{
+           if(!user){
+                 return Promise.reject();
+             }
+           return new Promise((resolve,reject)=>{
+               bcrypt.compare(password,user.password,(err,res)=>{
+                   if(res){
+                       resolve(user);
+                   }else{
+                       reject();
+                   }
+               });
+           });
+    });
+ }
+
 // before saving the password to the database we want to hashing it .
+
   UserSchema.pre('save',function(next){
       var user = this;
       if(user.isModified('password')){
@@ -79,6 +99,8 @@ const UserSchema = new mongoose.Schema({
           next();
       }
   });
+
+  
 
 var User = mongoose.model('User', UserSchema);
 module.exports={User};
